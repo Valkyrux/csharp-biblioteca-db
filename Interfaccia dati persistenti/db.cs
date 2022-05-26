@@ -58,13 +58,13 @@ namespace csharp_biblioteca_db
 
         internal static string getInsertAutoreCommandString(Autore nuovoAutore)
         {
-            var conn = Connect();
-            if (conn == null)
-            {
-                throw new Exception("Unable to connect to the database");
-            }
-
             return String.Format("INSERT INTO [autori] (nome, cognome, mail) VALUES ('{0}', '{1}', '{2}')", nuovoAutore.Nome, nuovoAutore.Cognome, nuovoAutore.Mail);
+        }
+
+        internal static string getReadAutoreIdCommandString(Autore autoreDaCercare, string costantePerSelect="")
+        {
+            //costante per select aggiunge un parametro inserito sul risultato della select da scrivere nel formato ", constante per select"
+            return String.Format("SELECT [id_autore]{0} FROM [autori] WHERE [nome] = '{1}' AND [cognome] = '{2}' AND [mail] = '{3}'",costantePerSelect, autoreDaCercare.Nome, autoreDaCercare.Cognome, autoreDaCercare.Mail);
         }
         internal static List<Tuple<string, string, string>> getScaffaliFromDb()
         {
@@ -114,9 +114,11 @@ namespace csharp_biblioteca_db
 
             foreach(Autore autore in nuovoLibro.Autori)
             {
-                cmd += String.Format("BEGIN\nIF NOT EXISTS(SELECT * FROM [autori] WHERE [nome] = '{0}' AND [cognome] = '{1}' AND [mail] = '{2}')\n", autore.Nome, autore.Cognome, autore.Mail);
-                cmd += String.Format("BEGIN\nINSERT INTO [autori](nome, cognome, mail) VALUES ('{0}', '{1}', '{2}')\nEND\n", autore.Nome, autore.Cognome, autore.Mail);
+                cmd += String.Format("BEGIN\nIF NOT EXISTS({0})\n", getReadAutoreIdCommandString(autore));
+                cmd += String.Format("BEGIN\n{0}\nEND\n", getInsertAutoreCommandString(autore));
+                //cmd += String.Format("ELSE\nINSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
                 cmd += String.Format("END\n");
+                cmd += String.Format("INSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
             }
 
             cmd += "COMMIT TRANSACTION;";
@@ -136,6 +138,86 @@ namespace csharp_biblioteca_db
                 {
                     conn.Close();
                 }
+            }
+        }
+
+        internal static long getCodiceUnicoDocumento()
+        {
+            var conn = Connect();
+            if(conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+            string cmd = "DECLARE @valore BIGINT UPDATE[codici_univoco] SET valore = valore + 1, @valore = valore + 1 WHERE[campo] = 'documento' SELECT @valore";
+            long codice;
+            using(SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                var reader = select.ExecuteReader();
+                reader.Read();
+                codice = reader.GetInt64(0);
+            }
+            conn.Close();
+            return codice;
+        }
+
+        internal static void setCodiceUnivocoDocumento(long valoreDiPartenza)
+        {
+            //utilizzare questo metodo per settare il valore di partenza nel DB da cui verrano calcolate le chiavi
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+            string cmd = String.Format("INSERT INTO [codici_univoco] (campo, valore) VALUES ('documento', {0})", valoreDiPartenza);
+            
+            using (SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                var insert = select.ExecuteNonQuery();
+
+                Console.WriteLine(insert);
+                Console.WriteLine("Valore di partenza per la generazione dei codici documenti impostato a {0}", valoreDiPartenza);
+            }
+            conn.Close();
+        }
+
+        internal static List<List<string>> getDocumentiFromDBByAutore(string autore)
+        {
+            List<List<string>> result = new List<List<string>>();
+
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            var cmd = String.Format("SELECT [tipo], [codice]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nWHERE [autori].[nome] LIKE '{0}%' OR [autori].[cognome] LIKE '{0}%'\n", autore);
+        
+            using (SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    
+                    var response = select.ExecuteReader();
+                    while (response.Read())
+                    {
+                        /*
+                        result.Add(new List<string>
+                        {
+                            response.GetString(0), response.GetString(1)
+                        });*/
+                        Console.WriteLine("{0}, {1}", response.GetString(0), response.GetInt32(1));
+                    }
+                    //Console.WriteLine(select.ExecuteNonQuery());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return result;
             }
         }
     }

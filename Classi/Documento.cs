@@ -9,7 +9,7 @@ namespace csharp_biblioteca_db
     enum Stato { Disponibile, Prestito }
     internal class Documento
     {
-        public string Codice { get; set; }
+        public long Codice { get; set; }
         public string Titolo { get; set; }
         public string Anno { get; set; }
         public string Settore { get; set; }
@@ -17,7 +17,7 @@ namespace csharp_biblioteca_db
         public List<Autore> Autori { get; set; }
         public Scaffale Scaffale { get; set; }
 
-        public Documento(string Codice, string Titolo, string Anno, string Settore, Scaffale Scaffale, List<Autore> listaDiAutori)
+        public Documento(long Codice, string Titolo, string Anno, string Settore, Scaffale Scaffale, List<Autore> listaDiAutori)
         {
             this.Codice = Codice;
             this.Titolo = Titolo;
@@ -55,7 +55,7 @@ namespace csharp_biblioteca_db
     {
         public int NumeroPagine { get; set; }
 
-        public Libro(string Codice, string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listaAutori)
+        public Libro(long Codice, string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listaAutori)
         {
             this.NumeroPagine = NumeroPagine;
         }
@@ -73,7 +73,7 @@ namespace csharp_biblioteca_db
 
         public int Durata { get; set; }
 
-        public DVD(string Codice, string Titolo, string Anno, string Settore, int Durata, Scaffale scaffale, List<Autore> listAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listAutori)
+        public DVD(long Codice, string Titolo, string Anno, string Settore, int Durata, Scaffale scaffale, List<Autore> listAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listAutori)
         {
             this.Durata = Durata;
         }

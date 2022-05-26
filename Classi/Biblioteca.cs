@@ -11,6 +11,18 @@ namespace csharp_biblioteca_db
         public string Nome { get; set; }
         public List<Scaffale> ScaffaliBiblioteca { get; set; }
 
+        public bool ScaffaliContains(Scaffale scaffale)
+        {
+            foreach (Scaffale scaffaleInLista in this.ScaffaliBiblioteca)
+            {
+                if(scaffaleInLista.Numero == scaffale.Numero)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public Biblioteca(string Nome)
         {
             this.Nome = Nome;
@@ -25,11 +37,7 @@ namespace csharp_biblioteca_db
                 case "1":
                     Console.WriteLine("\t-> Inserisci autore");
                     string? inputAutore = Console.ReadLine();
-                    List<Documento>? result = SearchByAutore(inputAutore);
-                    if (result != null)
-                    {
-                        return 1;
-                    }
+                    List<Documento> result = SearchByAutore(inputAutore);
                     break;
                 default: 
                     Console.WriteLine("\tOperazione NON valida");
@@ -60,19 +68,18 @@ namespace csharp_biblioteca_db
             return false;
         }
 
-        public void aggiungiLibro(string Codice, string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori)
+        public void aggiungiLibro(string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori)
         {
-            Libro nuovoLibro = new Libro(Codice, Titolo, Anno, Settore, NumeroPagine, scaffale, listaAutori);
-            Console.WriteLine(db.AddLibro(nuovoLibro));
-            /*getScaffali();
-            if (this.ScaffaliBiblioteca.Contains(scaffale))
+            getScaffali();
+            if (this.ScaffaliContains(scaffale))
             {
-
+                Libro nuovoLibro = new Libro(db.getCodiceUnicoDocumento(), Titolo, Anno, Settore, NumeroPagine, scaffale, listaAutori);
+                Console.WriteLine("Righe inserite nel database: {0}", db.AddLibro(nuovoLibro));
             }
             else
             {
                 Console.WriteLine("Scaffale non valido");
-            }*/
+            }
         }
 
         public List<Documento>? SearchByCodice(string Codice)
@@ -85,9 +92,13 @@ namespace csharp_biblioteca_db
             return null;
         }
 
-        public List<Documento>? SearchByAutore(string? autore)
+        public List<Documento> SearchByAutore(string? autore)
         {
-            return null;
+            List<Documento> result = new List<Documento>();
+
+            db.getDocumentiFromDBByAutore(autore);
+
+            return result;
         }
 
         public List<Prestito>? SearchPrestiti(string Numero)

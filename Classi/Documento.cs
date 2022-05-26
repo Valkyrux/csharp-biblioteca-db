@@ -77,9 +77,9 @@ namespace csharp_biblioteca_db
     class DVD : Documento
     {
 
-        public int Durata { get; set; }
+        public TimeSpan Durata { get; set; }
 
-        public DVD(long Codice, string Titolo, string Anno, string Settore, int Durata, Scaffale scaffale, List<Autore> listAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listAutori)
+        public DVD(long Codice, string Titolo, string Anno, string Settore, TimeSpan Durata, Scaffale scaffale, List<Autore> listAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listAutori)
         {
             this.Durata = Durata;
         }

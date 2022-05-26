@@ -119,6 +119,11 @@ namespace csharp_biblioteca_db
                     Libro nuovoLibro = new Libro(long.Parse(element[1]), element[2], element[3], element[4], int.Parse(element[7]), this.GetScaffaleFromNumber(element[6]), autoriList);
                     Console.WriteLine("{0}\n", nuovoLibro.ToString());
                 }
+                else if(element[0] == "dvd")
+                {
+                    DVD nuovoDvd = new DVD(long.Parse(element[1]), element[2], element[3], element[4], TimeSpan.Parse(element[8]), this.GetScaffaleFromNumber(element[6]), autoriList);
+                    Console.WriteLine("{0}\n", nuovoDvd.ToString());
+                }
             });
         }
 

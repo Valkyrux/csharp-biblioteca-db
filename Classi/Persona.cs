@@ -26,7 +26,11 @@ namespace csharp_biblioteca_db
     }
     internal class Autore : Persona
     {
-        public Autore(string Nome, string Cognome) : base(Nome, Cognome) { }
+        public string? Mail { get; }
+        public Autore(string Nome, string Cognome, string Mail) : base(Nome, Cognome) 
+        {
+            this.Mail = Mail;
+        }
     }
 
     internal class Utente : Persona

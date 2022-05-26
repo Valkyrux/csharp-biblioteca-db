@@ -60,6 +60,21 @@ namespace csharp_biblioteca_db
             return false;
         }
 
+        public void aggiungiLibro(string Codice, string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori)
+        {
+            Libro nuovoLibro = new Libro(Codice, Titolo, Anno, Settore, NumeroPagine, scaffale, listaAutori);
+            Console.WriteLine(db.AddLibro(nuovoLibro));
+            /*getScaffali();
+            if (this.ScaffaliBiblioteca.Contains(scaffale))
+            {
+
+            }
+            else
+            {
+                Console.WriteLine("Scaffale non valido");
+            }*/
+        }
+
         public List<Documento>? SearchByCodice(string Codice)
         {
             return null;

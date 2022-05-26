@@ -55,6 +55,17 @@ namespace csharp_biblioteca_db
                 }
             }
         }
+
+        internal static string getInsertAutoreCommandString(Autore nuovoAutore)
+        {
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            return String.Format("INSERT INTO [autori] (nome, cognome, mail) VALUES ('{0}', '{1}', '{2}')", nuovoAutore.Nome, nuovoAutore.Cognome, nuovoAutore.Mail);
+        }
         internal static List<Tuple<string, string, string>> getScaffaliFromDb()
         {
             List<Tuple<string, string, string>> result = new List<Tuple<string, string, string>>();
@@ -86,6 +97,45 @@ namespace csharp_biblioteca_db
                     conn.Close();
                 }
                 return result;
+            }
+        }
+        internal static int AddLibro(Libro nuovoLibro)
+        {
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            string cmd = "BEGIN TRANSACTION\n";
+            
+            cmd += String.Format("INSERT INTO [documenti] (codice, titolo, anno, settore, stato, tipo, scaffale) VALUES ('{0}', '{1}', '{2}', '{3}', 'disponibile', 'libro', '{4}')\n", nuovoLibro.Codice, nuovoLibro.Titolo, nuovoLibro.Anno, nuovoLibro.Settore, nuovoLibro.Scaffale.Numero);
+            cmd += String.Format("INSERT INTO [libri] (codice, numero_pagine) VALUES ('{0}', '{1}')", nuovoLibro.Codice, nuovoLibro.NumeroPagine);
+
+            foreach(Autore autore in nuovoLibro.Autori)
+            {
+                cmd += String.Format("BEGIN\nIF NOT EXISTS(SELECT * FROM [autori] WHERE [nome] = '{0}' AND [cognome] = '{1}' AND [mail] = '{2}')\n", autore.Nome, autore.Cognome, autore.Mail);
+                cmd += String.Format("BEGIN\nINSERT INTO [autori](nome, cognome, mail) VALUES ('{0}', '{1}', '{2}')\nEND\n", autore.Nome, autore.Cognome, autore.Mail);
+                cmd += String.Format("END\n");
+            }
+
+            cmd += "COMMIT TRANSACTION;";
+            using (SqlCommand insert = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    var numrows = insert.ExecuteNonQuery();
+                    return numrows;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return 0;
+                }
+                finally
+                {
+                    conn.Close();
+                }
             }
         }
     }

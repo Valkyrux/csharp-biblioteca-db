@@ -11,19 +11,21 @@ namespace csharp_biblioteca_db
     {
         public string Codice { get; set; }
         public string Titolo { get; set; }
-        public int Anno { get; set; }
+        public string Anno { get; set; }
         public string Settore { get; set; }
         public Stato Stato { get; set; }
         public List<Autore> Autori { get; set; }
         public Scaffale Scaffale { get; set; }
 
-        public Documento(string Codice, string Titolo, int Anno, string Settore, string numeroScaffale, string sede, string stanza)
+        public Documento(string Codice, string Titolo, string Anno, string Settore, Scaffale Scaffale, List<Autore> listaDiAutori)
         {
             this.Codice = Codice;
             this.Titolo = Titolo;
             this.Settore = Settore;
+            this.Anno = Anno;
             this.Autori = new List<Autore>();
-            this.Scaffale = new Scaffale(numeroScaffale, sede, stanza);
+            this.Autori = listaDiAutori;
+            this.Scaffale = Scaffale;
             this.Stato = Stato.Disponibile;
         }
 
@@ -53,7 +55,7 @@ namespace csharp_biblioteca_db
     {
         public int NumeroPagine { get; set; }
 
-        public Libro(string Codice, string Titolo, int Anno, string Settore, int NumeroPagine, string numeroScaffale, string sede, string stanza) : base(Codice, Titolo, Anno, Settore, numeroScaffale, sede, stanza)
+        public Libro(string Codice, string Titolo, string Anno, string Settore, int NumeroPagine, Scaffale scaffale, List<Autore> listaAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listaAutori)
         {
             this.NumeroPagine = NumeroPagine;
         }
@@ -71,7 +73,7 @@ namespace csharp_biblioteca_db
 
         public int Durata { get; set; }
 
-        public DVD(string Codice, string Titolo, int Anno, string Settore, int Durata, string numeroScaffale, string sede, string stanza) : base(Codice, Titolo, Anno, Settore, numeroScaffale, sede, stanza)
+        public DVD(string Codice, string Titolo, string Anno, string Settore, int Durata, Scaffale scaffale, List<Autore> listAutori) : base(Codice, Titolo, Anno, Settore, scaffale, listAutori)
         {
             this.Durata = Durata;
         }

@@ -23,6 +23,18 @@ namespace csharp_biblioteca_db
             return false;
         }
 
+        protected Scaffale GetScaffaleFromNumber(string Numero)
+        {
+            foreach (Scaffale scaffale in this.ScaffaliBiblioteca)
+            {
+                if(scaffale.Numero == Numero)
+                {
+                    return scaffale;
+                }
+            }
+            throw new Exception("No such scaffali with this number");
+        }
+
         public Biblioteca(string Nome)
         {
             this.Nome = Nome;
@@ -37,7 +49,7 @@ namespace csharp_biblioteca_db
                 case "1":
                     Console.WriteLine("\t-> Inserisci autore");
                     string? inputAutore = Console.ReadLine();
-                    List<Documento> result = SearchByAutore(inputAutore);
+                    this.SearchByAutore(inputAutore);
                     break;
                 default: 
                     Console.WriteLine("\tOperazione NON valida");
@@ -92,13 +104,22 @@ namespace csharp_biblioteca_db
             return null;
         }
 
-        public List<Documento> SearchByAutore(string? autore)
+        public void SearchByAutore(string? autore)
         {
-            List<Documento> result = new List<Documento>();
-
-            db.getDocumentiFromDBByAutore(autore);
-
-            return result;
+            db.getDocumentiFromDBByAutore(autore).ForEach(element =>
+            {
+                List<Autore> autoriList = new List<Autore>();
+                db.getAutoriFromCodiceDocumento(long.Parse(element[1])).ForEach(element =>
+                {
+                    Autore nuovoAutore = new Autore(element.Item1, element.Item2, element.Item3);
+                    autoriList.Add(nuovoAutore);
+                });
+                if (element[0] == "libro")
+                {
+                    Libro nuovoLibro = new Libro(long.Parse(element[1]), element[2], element[3], element[4], int.Parse(element[7]), this.GetScaffaleFromNumber(element[6]), autoriList);
+                    Console.WriteLine("{0}\n", nuovoLibro.ToString());
+                }
+            });
         }
 
         public List<Prestito>? SearchPrestiti(string Numero)

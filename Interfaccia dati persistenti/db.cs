@@ -180,9 +180,9 @@ namespace csharp_biblioteca_db
             conn.Close();
         }
 
-        internal static List<List<string>> getDocumentiFromDBByAutore(string autore)
+        internal static List<Tuple<string, string, string>> getAutoriFromCodiceDocumento(long codice)
         {
-            List<List<string>> result = new List<List<string>>();
+            List<Tuple<string, string, string>> result = new List<Tuple<string, string, string>>();
 
             var conn = Connect();
             if (conn == null)
@@ -190,23 +190,74 @@ namespace csharp_biblioteca_db
                 throw new Exception("Unable to connect to the database");
             }
 
-            var cmd = String.Format("SELECT [tipo], [codice]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nWHERE [autori].[nome] LIKE '{0}%' OR [autori].[cognome] LIKE '{0}%'\n", autore);
+            var cmd = String.Format("SELECT [nome], [cognome], [mail]\nFROM [autori]\nINNER JOIN [autore_documento] ON [autori].[id_autore] = [autore_documento].[id_autore]\nWHERE [autore_documento].[id_documento] = {0}", codice);
+
+            using (SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    var response = select.ExecuteReader();
+                    while (response.Read())
+                    {
+                        result.Add(new Tuple<string, string, string>(response.GetString(0), response.GetString(1), response.GetString(2)));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return result;
+            }
+        }
+
+        internal static List<List<string>> getDocumentiFromDBByAutore(string autore)
+        {
+            List<List<string>> result = new List<List<string>>();
+
+            var conn = Connect();
+            var conn1 = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            var cmd = String.Format("SELECT [tipo], [documenti].[codice], [titolo], [anno], [settore], [stato], [scaffale], [libri].[numero_pagine], [dvd].[durata]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [documenti].[codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nFULL OUTER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nFULL OUTER JOIN [dvd] ON [documenti].[codice] = [dvd].[codice]\nWHERE [autori].[nome] LIKE '{0}%' OR [autori].[cognome] LIKE '{0}%'\n", autore);
         
             using (SqlCommand select = new SqlCommand(cmd, conn))
             {
                 try
                 {
-                    
                     var response = select.ExecuteReader();
                     while (response.Read())
                     {
-                        /*
-                        result.Add(new List<string>
+                        List<string> nuovoDocInLista = new List<string>();
+                        nuovoDocInLista.Add(response.GetString(0));
+                        nuovoDocInLista.Add(response.GetInt32(1).ToString());
+                        nuovoDocInLista.Add(response.GetString(2));
+                        nuovoDocInLista.Add(response.GetString(3));
+                        nuovoDocInLista.Add(response.GetString(4));
+                        nuovoDocInLista.Add(response.GetString(5));
+                        nuovoDocInLista.Add(response.GetString(6));
+
+                        if(response.GetString(0) == "libro")
                         {
-                            response.GetString(0), response.GetString(1)
-                        });*/
-                        Console.WriteLine("{0}, {1}", response.GetString(0), response.GetInt32(1));
+                            nuovoDocInLista.Add(response.GetInt32(7).ToString());
+                        } 
+                        else if(response.GetString(0) == "dvd")
+                        {
+                            nuovoDocInLista.Add(response.GetTimeSpan(8).ToString());
+                        }
+                        else
+                        {
+                            throw new Exception("Invalid field 'type' on DB");
+                        }
+                        result.Add(nuovoDocInLista);
                     }
+
                     //Console.WriteLine(select.ExecuteNonQuery());
                 }
                 catch (Exception ex)
@@ -216,6 +267,7 @@ namespace csharp_biblioteca_db
                 finally
                 {
                     conn.Close();
+                    conn1.Close();
                 }
                 return result;
             }

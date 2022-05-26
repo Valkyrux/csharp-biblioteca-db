@@ -31,12 +31,18 @@ namespace csharp_biblioteca_db
 
         public override string ToString()
         {
-            return string.Format("Codice:{0}\nTitolo:{1}\nSettore:{2}\nStato:{3}\nScaffale numero:{4}",
+            string result = string.Format("Codice            :   {0}\nTitolo            :   {1}\nSettore           :   {2}\nStato             :   {3}\nScaffale numero   :   {4}\n",
                 this.Codice,
                 this.Titolo,
                 this.Settore,
                 this.Stato,
                 this.Scaffale.Numero);
+            result += "Autori            :   ";
+            foreach (Autore autore in this.Autori)
+            {
+                result = result + autore.Nome + " " + autore.Cognome + ", ";
+            }
+            return result;
         }
 
         public void ImpostaInPrestito()
@@ -62,7 +68,7 @@ namespace csharp_biblioteca_db
 
         public override string ToString()
         {
-            return string.Format("{0}\nNumeroPagine:{1}",
+            return string.Format("{0}\nNumero di pagine  :   {1}",
                 base.ToString(),
                 this.NumeroPagine);
         }
@@ -80,7 +86,7 @@ namespace csharp_biblioteca_db
 
         public override string ToString()
         {
-            return string.Format("{0}\nDurata:{1}",
+            return string.Format("{0}\nDurata            :   {1}",
                 base.ToString(),
                 this.Durata);
         }

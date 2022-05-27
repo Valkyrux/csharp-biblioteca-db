@@ -219,7 +219,6 @@ namespace csharp_biblioteca_db
             List<List<string>> result = new List<List<string>>();
 
             var conn = Connect();
-            var conn1 = Connect();
             if (conn == null)
             {
                 throw new Exception("Unable to connect to the database");
@@ -267,7 +266,6 @@ namespace csharp_biblioteca_db
                 finally
                 {
                     conn.Close();
-                    conn1.Close();
                 }
                 return result;
             }

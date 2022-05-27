@@ -13,24 +13,21 @@ namespace csharp_biblioteca_db
             //db.setCodiceUnivocoDocumento(0);
             //Console.WriteLine(db.getCodiceUnicoDocumento());
 
-            /*
+            
             List<Autore> listaDiAutori = new List<Autore>();
-            listaDiAutori.Add(new Autore("Alessandr", "Manzoni", "alexmanzo@gmail.com"));
-            listaDiAutori.Add(new Autore("Benito", "Mussolini", "benito@nonsonofascista.hitler"));
+            //listaDiAutori.Add(new Autore("Alessandr", "Manzoni", "alexmanzo@gmail.com"));
+            listaDiAutori.Add(new Autore("Gianni", "Gianelli", "gianni@gina.gia"));
 
-            b.aggiungiLibro("I promessi sposi", "2001", "Romanzo", 2000, new Scaffale("S001", "Via Piave, 5", "Stanza A"), listaDiAutori);*/
+            b.aggiungiLibro("I promessi sposi", "2001", "Romanzo", 2000, new Scaffale("S004", "Via Piave, 5", "Stanza A"), listaDiAutori);
 
             Console.WriteLine("LISTA OPERAZIONI\ncosa vuoi fare?");
             Console.WriteLine("\t1 -> cerca documento per autore");
+            Console.WriteLine("\t2 -> Inserisci documento");
             string? input = Console.ReadLine();
           
             while (input != null && input != "")
             {
                 b.GestisciOperazioniBiblioteca(input);
-                foreach (var item in b.ScaffaliBiblioteca)
-                {
-                    Console.WriteLine(item.Numero + " | " + item.Sede + " | " + item.Sede);
-                }
                 input = Console.ReadLine();
             }
         }

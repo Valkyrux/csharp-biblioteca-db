@@ -15,7 +15,7 @@ namespace csharp_biblioteca_db
         {
             foreach (Scaffale scaffaleInLista in this.ScaffaliBiblioteca)
             {
-                if(scaffaleInLista.Numero == scaffale.Numero)
+                if(scaffaleInLista.Numero == scaffale.Numero && scaffaleInLista.Sede == scaffale.Sede && scaffaleInLista.Stanza == scaffale.Stanza)
                 {
                     return true;
                 }
@@ -50,6 +50,77 @@ namespace csharp_biblioteca_db
                     Console.WriteLine("\t-> Inserisci autore");
                     string? inputAutore = Console.ReadLine();
                     this.SearchByAutore(inputAutore);
+                    break;
+                case "2":
+                    Console.WriteLine("- SELEZIONA LA TIPOLOGIA DI DOCUMENTO DA CARICARE");
+                    Console.WriteLine("\t- 1 : libro");
+                    Console.WriteLine("\t- 2 : dvd");
+                    Console.WriteLine("\t- qualsiasi altro input per annullare l'operazione");
+                    
+                    string? addChoice = Console.ReadLine();
+
+                    if (addChoice == "1" || addChoice == "2")
+                    {
+                        string? titolo;
+                        List<Autore> Autori = new List<Autore>();
+                        int anno;
+                        string? settore;
+                        string? numeroScaffale;
+                        int numPagine;
+                        TimeSpan duranta;
+
+                        Console.WriteLine("-> Inserisci Titolo");
+                        titolo = Console.ReadLine();
+                        
+                        string? autoreNome;
+                        string? autoreCognome;
+                        string? autoreMail;
+
+                        bool Continue = true;
+                        Console.WriteLine("-> Inserisci Autori");
+                        while (Continue)
+                        {
+                            Console.WriteLine("  -> Inserisci il nome dell'autore");
+                            autoreNome = Console.ReadLine();
+                            Console.WriteLine("  -> Inserisci il cognome dell'autore");
+                            autoreCognome = Console.ReadLine();
+                            Console.WriteLine("  -> Inserisci la mail dell'autore");
+                            autoreMail = Console.ReadLine();
+
+                            if (autoreNome != "" && autoreCognome != "" && autoreNome != null && autoreCognome != null)
+                            {
+                                Autori.Add(new Autore(autoreNome, autoreCognome, autoreMail));
+                            }
+                            else
+                            {
+                                Console.WriteLine(" autore non valido\n");
+                            }
+
+                            Console.WriteLine("Inserire un altro autore? digita 'SI' per continuare, qualsiasi altro input per passare alla voce successiva");
+                            string? inputToContinue = Console.ReadLine();
+                            if (inputToContinue != "SI")
+                            {
+                                Continue = false;
+                            }
+                        }
+                        Console.WriteLine("-> Inserisci Anno");                            
+                        int.TryParse(Console.ReadLine(), out anno);
+
+                        Console.WriteLine("-> Inserisci Settore");
+                        settore = Console.ReadLine();
+
+                        Console.WriteLine("-> Inserisci numero scaffale");
+                        numeroScaffale = Console.ReadLine();
+
+
+                        if (addChoice == "1")
+                        {
+                            Console.WriteLine("-> Inserisci Numero di Pagine");
+                            int.TryParse(Console.ReadLine(), out numPagine);
+                            this.aggiungiLibro(titolo, anno.ToString(), settore, numPagine, GetScaffaleFromNumber(numeroScaffale), Autori);
+                        }
+                    }
+
                     break;
                 default: 
                     Console.WriteLine("\tOperazione NON valida");
@@ -121,7 +192,7 @@ namespace csharp_biblioteca_db
                 }
                 else if(element[0] == "dvd")
                 {
-                    DVD nuovoDvd = new DVD(long.Parse(element[1]), element[2], element[3], element[4], TimeSpan.Parse(element[8]), this.GetScaffaleFromNumber(element[6]), autoriList);
+                    DVD nuovoDvd = new DVD(long.Parse(element[1]), element[2], element[3], element[4], TimeSpan.Parse(element[7]), this.GetScaffaleFromNumber(element[6]), autoriList);
                     Console.WriteLine("{0}\n", nuovoDvd.ToString());
                 }
             });

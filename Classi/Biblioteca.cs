@@ -47,7 +47,7 @@ namespace csharp_biblioteca_db
             switch (CodiceOperazione)
             {
                 case "1":
-                    Console.WriteLine("\t-> Inserisci autore");
+                    Console.WriteLine("\t-> Inserisci parola chiave");
                     string? inputAutore = Console.ReadLine();
                     this.SearchByAutore(inputAutore);
                     break;
@@ -66,8 +66,6 @@ namespace csharp_biblioteca_db
                         int anno;
                         string? settore;
                         string? numeroScaffale;
-                        int numPagine;
-                        TimeSpan duranta;
 
                         Console.WriteLine("-> Inserisci Titolo");
                         titolo = Console.ReadLine();
@@ -115,9 +113,39 @@ namespace csharp_biblioteca_db
 
                         if (addChoice == "1")
                         {
-                            Console.WriteLine("-> Inserisci Numero di Pagine");
-                            int.TryParse(Console.ReadLine(), out numPagine);
-                            this.aggiungiLibro(titolo, anno.ToString(), settore, numPagine, GetScaffaleFromNumber(numeroScaffale), Autori);
+                            try
+                            {
+                                int numPagine;
+                                Console.WriteLine("-> Inserisci Numero di Pagine");
+                                int.TryParse(Console.ReadLine(), out numPagine);
+                                this.aggiungiLibro(titolo, anno.ToString(), settore, numPagine, GetScaffaleFromNumber(numeroScaffale), Autori);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                            
+                        }
+                        if(addChoice == "2")
+                        {
+                            try
+                            {
+                                TimeSpan durata;
+                                Console.WriteLine("-> Inserisci durata (hh:mm)");
+                                if (TimeSpan.TryParse(Console.ReadLine(), out durata))
+                                {
+                                    this.aggiungiDvd(titolo, anno.ToString(), settore, durata, GetScaffaleFromNumber(numeroScaffale), Autori);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Durata non valida");
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+
                         }
                     }
 
@@ -165,6 +193,21 @@ namespace csharp_biblioteca_db
             }
         }
 
+        public void aggiungiDvd(string Titolo, string Anno, string Settore, TimeSpan Durata, Scaffale scaffale, List<Autore> listaAutori)
+        {
+            getScaffali();
+            if (this.ScaffaliContains(scaffale))
+            {
+                Console.WriteLine("CIAO");
+                DVD nuovoDVD = new DVD(db.getCodiceUnicoDocumento(), Titolo, Anno, Settore, Durata, scaffale, listaAutori);
+                Console.WriteLine("Righe inserite nel database: {0}", db.AddDVD(nuovoDVD));
+            }
+            else
+            {
+                Console.WriteLine("Scaffale non valido");
+            }
+        }
+
         public List<Documento>? SearchByCodice(string Codice)
         {
             return null;
@@ -175,9 +218,10 @@ namespace csharp_biblioteca_db
             return null;
         }
 
-        public void SearchByAutore(string? autore)
+        public void SearchByAutore(string? parola)
         {
-            db.getDocumentiFromDBByAutore(autore).ForEach(element =>
+            List<string> codiciInseriti = new List<string> (); 
+            db.getDocumentiFromDBByString(parola).ForEach(element =>
             {
                 List<Autore> autoriList = new List<Autore>();
                 db.getAutoriFromCodiceDocumento(long.Parse(element[1])).ForEach(element =>
@@ -185,15 +229,17 @@ namespace csharp_biblioteca_db
                     Autore nuovoAutore = new Autore(element.Item1, element.Item2, element.Item3);
                     autoriList.Add(nuovoAutore);
                 });
-                if (element[0] == "libro")
+                if (element[0] == "libro" && !codiciInseriti.Contains(element[1]))
                 {
                     Libro nuovoLibro = new Libro(long.Parse(element[1]), element[2], element[3], element[4], int.Parse(element[7]), this.GetScaffaleFromNumber(element[6]), autoriList);
                     Console.WriteLine("{0}\n", nuovoLibro.ToString());
+                    codiciInseriti.Add(element[1]);
                 }
-                else if(element[0] == "dvd")
+                else if(element[0] == "dvd" && !codiciInseriti.Contains(element[1]))
                 {
                     DVD nuovoDvd = new DVD(long.Parse(element[1]), element[2], element[3], element[4], TimeSpan.Parse(element[7]), this.GetScaffaleFromNumber(element[6]), autoriList);
                     Console.WriteLine("{0}\n", nuovoDvd.ToString());
+                    codiciInseriti.Add(element[1]);
                 }
             });
         }

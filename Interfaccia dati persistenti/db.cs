@@ -141,6 +141,48 @@ namespace csharp_biblioteca_db
             }
         }
 
+        internal static int AddDVD(DVD nuovoDVD)
+        {
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            string cmd = "BEGIN TRANSACTION\n";
+
+            cmd += String.Format("INSERT INTO [documenti] (codice, titolo, anno, settore, stato, tipo, scaffale) VALUES ('{0}', '{1}', '{2}', '{3}', 'disponibile', 'dvd', '{4}')\n", nuovoDVD.Codice, nuovoDVD.Titolo, nuovoDVD.Anno, nuovoDVD.Settore, nuovoDVD.Scaffale.Numero);
+            cmd += String.Format("INSERT INTO [dvd] (codice, durata) VALUES ('{0}', '{1}')", nuovoDVD.Codice, nuovoDVD.Durata);
+
+            foreach (Autore autore in nuovoDVD.Autori)
+            {
+                cmd += String.Format("BEGIN\nIF NOT EXISTS({0})\n", getReadAutoreIdCommandString(autore));
+                cmd += String.Format("BEGIN\n{0}\nEND\n", getInsertAutoreCommandString(autore));
+                //cmd += String.Format("ELSE\nINSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
+                cmd += String.Format("END\n");
+                cmd += String.Format("INSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoDVD.Codice)));
+            }
+
+            cmd += "COMMIT TRANSACTION;";
+            using (SqlCommand insert = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    var numrows = insert.ExecuteNonQuery();
+                    return numrows;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return 0;
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+        }
+
         internal static long getCodiceUnicoDocumento()
         {
             var conn = Connect();
@@ -214,7 +256,7 @@ namespace csharp_biblioteca_db
             }
         }
 
-        internal static List<List<string>> getDocumentiFromDBByAutore(string autore)
+        internal static List<List<string>> getDocumentiFromDBByString(string autore)
         {
             List<List<string>> result = new List<List<string>>();
 
@@ -224,7 +266,7 @@ namespace csharp_biblioteca_db
                 throw new Exception("Unable to connect to the database");
             }
 
-            var cmd = String.Format("SELECT [tipo], [documenti].[codice], [titolo], [anno], [settore], [stato], [scaffale], [libri].[numero_pagine], [dvd].[durata]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [documenti].[codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nFULL OUTER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nFULL OUTER JOIN [dvd] ON [documenti].[codice] = [dvd].[codice]\nWHERE [autori].[nome] LIKE '{0}%' OR [autori].[cognome] LIKE '{0}%'\n", autore);
+            var cmd = String.Format("SELECT [tipo], [documenti].[codice], [titolo], [anno], [settore], [stato], [scaffale], [libri].[numero_pagine], [dvd].[durata]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [documenti].[codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nFULL OUTER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nFULL OUTER JOIN [dvd] ON [documenti].[codice] = [dvd].[codice]\nWHERE CONCAT([documenti].[titolo], ' ',[autori].[nome], ' ', [autori].[cognome]) LIKE '%{0}%'\n", autore);
         
             using (SqlCommand select = new SqlCommand(cmd, conn))
             {

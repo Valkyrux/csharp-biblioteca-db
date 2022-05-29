@@ -175,7 +175,18 @@ namespace csharp_biblioteca_db
                                 Random rand = new Random();
                                 int numeroPartecipanti = rand.Next(1, 500);
                                 db.insertEvento(codiceLibro, dataEvento, numeroPartecipanti);
-                                List<int> listaInteressati = db.getRandomInteressati(numeroPartecipanti);
+                                List<Tuple<string, string>> listaInteressati = db.getRandomInteressati(numeroPartecipanti);
+                                foreach (var clienteInteressato in listaInteressati)
+                                {
+                                    Console.WriteLine("\nA: {0}", clienteInteressato.Item2);
+                                    Console.WriteLine("Oggetto: Avviso presentazione libro che potrebbe interessarti");
+                                    Console.WriteLine("Messaggio:\nCiao {0}, ti avvisiamo che giorno {1} presenteremo il libro '{2}' di", clienteInteressato.Item1, dataEvento, titolo);
+                                    foreach(var autore in listaDiAutori)
+                                    {
+                                        Console.Write("{0} {1}, ", autore.Item1, autore.Item2);
+                                    }
+                                    Console.WriteLine("Non mancare!");
+                                }
 
                             }
                             else if(controllaLibroInDb == false)

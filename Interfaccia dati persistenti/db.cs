@@ -345,16 +345,16 @@ namespace csharp_biblioteca_db
             }
         }
 
-        internal static List<int> getRandomInteressati(int numeroDiInteressati)
+        internal static List<Tuple<string, string>> getRandomInteressati(int numeroDiInteressati)
         {
-            List<int> listaInteressati = new List<int>();
+            List<Tuple<string, string>> listaInteressati = new List<Tuple<string, string>>();
             var conn = Connect();
             if (conn == null)
             {
                 throw new Exception("Unable to connect to the database");
             }
 
-            var cmd = String.Format("SELECT TOP {0} [clienti].[id]\nFROM [documenti]\nORDER BY NEWID()", numeroDiInteressati);
+            var cmd = String.Format("SELECT TOP {0} [nome_cliente], [email]\nFROM [clienti]\nORDER BY NEWID()", numeroDiInteressati);
             using (SqlCommand select = new SqlCommand(cmd, conn))
             {
                 try
@@ -362,7 +362,8 @@ namespace csharp_biblioteca_db
                     SqlDataReader response = select.ExecuteReader();
                     while (response.Read())
                     {
-                        listaInteressati.Add(response.GetInt32(0));
+                        Tuple<string, string> cliente_email = new Tuple<string, string>(response.GetString(0), response.GetString(1));
+                        listaInteressati.Add(cliente_email);
                     }
                 }
                 catch (Exception ex)

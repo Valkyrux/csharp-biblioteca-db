@@ -11,10 +11,10 @@ namespace csharp_biblioteca_db
     internal class db
     {
         private static string connectionString = "Data Source=DESKTOP-IN7U4B6;Initial Catalog=biblioteca;User ID=sa;Password=sa;Pooling=False";
-    
-        private static SqlConnection? Connect()
+
+        public static SqlConnection? Connect()
         {
-            SqlConnection conn = new SqlConnection(connectionString);            
+            SqlConnection conn = new SqlConnection(connectionString);
             try
             {
                 conn.Open();
@@ -24,7 +24,7 @@ namespace csharp_biblioteca_db
                 Console.WriteLine(ex.Message);
                 return null;
             }
-            return conn;        
+            return conn;
         }
 
         internal static int addScaffale(Scaffale nuovoScaffale)
@@ -37,14 +37,14 @@ namespace csharp_biblioteca_db
 
             var cmd = String.Format("INSERT INTO [scaffali] (codice, sede, stanza) VALUES ('{0}', '{1}', '{2}')", nuovoScaffale.Numero, nuovoScaffale.Sede, nuovoScaffale.Stanza);
 
-            using (SqlCommand insert = new SqlCommand(cmd,conn))
+            using (SqlCommand insert = new SqlCommand(cmd, conn))
             {
                 try
                 {
                     var numrows = insert.ExecuteNonQuery();
                     return numrows;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                     return 0;
@@ -61,10 +61,10 @@ namespace csharp_biblioteca_db
             return String.Format("INSERT INTO [autori] (nome, cognome, mail) VALUES ('{0}', '{1}', '{2}')", nuovoAutore.Nome, nuovoAutore.Cognome, nuovoAutore.Mail);
         }
 
-        internal static string getReadAutoreIdCommandString(Autore autoreDaCercare, string costantePerSelect="")
+        internal static string getReadAutoreIdCommandString(Autore autoreDaCercare, string costantePerSelect = "")
         {
             //costante per select aggiunge un parametro inserito sul risultato della select da scrivere nel formato ", constante per select"
-            return String.Format("SELECT [id_autore]{0} FROM [autori] WHERE [nome] = '{1}' AND [cognome] = '{2}' AND [mail] = '{3}'",costantePerSelect, autoreDaCercare.Nome, autoreDaCercare.Cognome, autoreDaCercare.Mail);
+            return String.Format("SELECT [id_autore]{0} FROM [autori] WHERE [nome] = '{1}' AND [cognome] = '{2}' AND [mail] = '{3}'", costantePerSelect, autoreDaCercare.Nome, autoreDaCercare.Cognome, autoreDaCercare.Mail);
         }
         internal static List<Tuple<string, string, string>> getScaffaliFromDb()
         {
@@ -108,15 +108,14 @@ namespace csharp_biblioteca_db
             }
 
             string cmd = "BEGIN TRANSACTION\n";
-            
+
             cmd += String.Format("INSERT INTO [documenti] (codice, titolo, anno, settore, stato, tipo, scaffale) VALUES ('{0}', '{1}', '{2}', '{3}', 'disponibile', 'libro', '{4}')\n", nuovoLibro.Codice, nuovoLibro.Titolo, nuovoLibro.Anno, nuovoLibro.Settore, nuovoLibro.Scaffale.Numero);
             cmd += String.Format("INSERT INTO [libri] (codice, numero_pagine) VALUES ('{0}', '{1}')", nuovoLibro.Codice, nuovoLibro.NumeroPagine);
 
-            foreach(Autore autore in nuovoLibro.Autori)
+            foreach (Autore autore in nuovoLibro.Autori)
             {
                 cmd += String.Format("BEGIN\nIF NOT EXISTS({0})\n", getReadAutoreIdCommandString(autore));
                 cmd += String.Format("BEGIN\n{0}\nEND\n", getInsertAutoreCommandString(autore));
-                //cmd += String.Format("ELSE\nINSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
                 cmd += String.Format("END\n");
                 cmd += String.Format("INSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
             }
@@ -158,7 +157,6 @@ namespace csharp_biblioteca_db
             {
                 cmd += String.Format("BEGIN\nIF NOT EXISTS({0})\n", getReadAutoreIdCommandString(autore));
                 cmd += String.Format("BEGIN\n{0}\nEND\n", getInsertAutoreCommandString(autore));
-                //cmd += String.Format("ELSE\nINSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoLibro.Codice)));
                 cmd += String.Format("END\n");
                 cmd += String.Format("INSERT INTO [autore_documento](id_autore, id_documento)\n{0}\n", getReadAutoreIdCommandString(autore, String.Format(", {0}", nuovoDVD.Codice)));
             }
@@ -186,13 +184,13 @@ namespace csharp_biblioteca_db
         internal static long getCodiceUnicoDocumento()
         {
             var conn = Connect();
-            if(conn == null)
+            if (conn == null)
             {
                 throw new Exception("Unable to connect to the database");
             }
             string cmd = "DECLARE @valore BIGINT UPDATE[codici_univoco] SET valore = valore + 1, @valore = valore + 1 WHERE[campo] = 'documento' SELECT @valore";
             long codice;
-            using(SqlCommand select = new SqlCommand(cmd, conn))
+            using (SqlCommand select = new SqlCommand(cmd, conn))
             {
                 var reader = select.ExecuteReader();
                 reader.Read();
@@ -211,7 +209,7 @@ namespace csharp_biblioteca_db
                 throw new Exception("Unable to connect to the database");
             }
             string cmd = String.Format("INSERT INTO [codici_univoco] (campo, valore) VALUES ('documento', {0})", valoreDiPartenza);
-            
+
             using (SqlCommand select = new SqlCommand(cmd, conn))
             {
                 var insert = select.ExecuteNonQuery();
@@ -256,7 +254,7 @@ namespace csharp_biblioteca_db
             }
         }
 
-        internal static List<List<string>> getDocumentiFromDBByString(string autore)
+        internal static List<List<string>> getDocumentiFromDBByString(string stringaDaCercare)
         {
             List<List<string>> result = new List<List<string>>();
 
@@ -266,8 +264,8 @@ namespace csharp_biblioteca_db
                 throw new Exception("Unable to connect to the database");
             }
 
-            var cmd = String.Format("SELECT [tipo], [documenti].[codice], [titolo], [anno], [settore], [stato], [scaffale], [libri].[numero_pagine], [dvd].[durata]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [documenti].[codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nFULL OUTER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nFULL OUTER JOIN [dvd] ON [documenti].[codice] = [dvd].[codice]\nWHERE CONCAT([documenti].[titolo], ' ',[autori].[nome], ' ', [autori].[cognome]) LIKE '%{0}%'\n", autore);
-        
+            var cmd = String.Format("SELECT [tipo], [documenti].[codice], [titolo], [anno], [settore], [stato], [scaffale], [libri].[numero_pagine], [dvd].[durata]\nFROM [documenti]\nINNER JOIN [autore_documento] ON [documenti].[codice] = [autore_documento].[id_documento]\nINNER JOIN [autori] ON [autori].[id_autore] = [autore_documento].[id_autore]\nFULL OUTER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nFULL OUTER JOIN [dvd] ON [documenti].[codice] = [dvd].[codice]\nWHERE CONCAT([documenti].[titolo], ' ',[autori].[nome], ' ', [autori].[cognome]) LIKE '%{0}%'\n", stringaDaCercare);
+
             using (SqlCommand select = new SqlCommand(cmd, conn))
             {
                 try
@@ -284,11 +282,11 @@ namespace csharp_biblioteca_db
                         nuovoDocInLista.Add(response.GetString(5));
                         nuovoDocInLista.Add(response.GetString(6));
 
-                        if(response.GetString(0) == "libro")
+                        if (response.GetString(0) == "libro")
                         {
                             nuovoDocInLista.Add(response.GetInt32(7).ToString());
-                        } 
-                        else if(response.GetString(0) == "dvd")
+                        }
+                        else if (response.GetString(0) == "dvd")
                         {
                             nuovoDocInLista.Add(response.GetTimeSpan(8).ToString());
                         }
@@ -311,6 +309,107 @@ namespace csharp_biblioteca_db
                 }
                 return result;
             }
+        }
+
+        internal static bool? checkLibroInDB(int codice, out string titolo)
+        {
+            titolo = "";
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            var cmd = String.Format("SELECT [documenti].[titolo]\nFROM [documenti]\nINNER JOIN [libri] ON [documenti].[codice] = [libri].[codice]\nWHERE [libri].[codice] = {0}", codice);
+            using (SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    SqlDataReader response = select.ExecuteReader();
+                    if (response.Read())
+                    {
+                        titolo = response.GetString(0);
+                        return true;
+                    }
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return null;
+            }
+        }
+
+        internal static List<int> getRandomInteressati(int numeroDiInteressati)
+        {
+            List<int> listaInteressati = new List<int>();
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            var cmd = String.Format("SELECT TOP {0} [clienti].[id]\nFROM [documenti]\nORDER BY NEWID()", numeroDiInteressati);
+            using (SqlCommand select = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    SqlDataReader response = select.ExecuteReader();
+                    while (response.Read())
+                    {
+                        listaInteressati.Add(response.GetInt32(0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return listaInteressati;
+            }
+        }
+
+        internal static bool insertEvento(int codiceLibro, DateTime dataEvento, int numeroPartecipanti)
+        {
+            int svolto = 0;
+            if (dataEvento < DateTime.Now)
+            {
+                svolto = 1;
+            }
+
+            var conn = Connect();
+            if (conn == null)
+            {
+                throw new Exception("Unable to connect to the database");
+            }
+
+            var cmd = String.Format("INSERT INTO [eventi](codice_libro, data_event, svolto, numero_partecipanti) VALUES ({0}, '{1}', {2}, {3})", codiceLibro, dataEvento, svolto, numeroPartecipanti);
+            using (SqlCommand insert = new SqlCommand(cmd, conn))
+            {
+                try
+                {
+                    int result = insert.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return false;
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return true;
+            }
+
         }
     }
 }

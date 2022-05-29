@@ -23,7 +23,7 @@ namespace csharp_biblioteca_db
             return false;
         }
 
-        protected Scaffale GetScaffaleFromNumber(string Numero)
+        public Scaffale GetScaffaleFromNumber(string Numero)
         {
             foreach (Scaffale scaffale in this.ScaffaliBiblioteca)
             {
@@ -150,6 +150,49 @@ namespace csharp_biblioteca_db
                     }
 
                     break;
+
+                case "3":
+                    Console.WriteLine("\t-> Inserisci il codice del libro");
+                    int codiceLibro;
+
+                    if(int.TryParse(Console.ReadLine(), out codiceLibro))
+                    {
+                        Console.WriteLine("\t-> Inserisci la data (YYYY-MM-DD, hh:mm)");
+                        DateTime dataEvento;
+                        if(DateTime.TryParse(Console.ReadLine(), out dataEvento))
+                        {
+                            string titolo;
+                            bool? controllaLibroInDb = db.checkLibroInDB(codiceLibro, out titolo);
+                            if (controllaLibroInDb == true) 
+                            {
+                                List<Tuple<string, string, string>> listaDiAutori = db.getAutoriFromCodiceDocumento(codiceLibro);
+                                foreach (Tuple<string, string, string> autore in listaDiAutori)
+                                {
+                                    Console.WriteLine("A: {0}", autore.Item3);
+                                    Console.WriteLine("OGGETTO: Promemoria per {0} {1} sulla presentazione del tuo libro", autore.Item1, autore.Item2);
+                                    Console.WriteLine("MESSAGGIO:\nGiorno {0} nella biblioteca '{1}' presenteremo il tuo libro '{2}'\n", dataEvento, this.Nome, titolo);
+                                }
+                                Random rand = new Random();
+                                int numeroPartecipanti = rand.Next(1, 500);
+                                db.insertEvento(codiceLibro, dataEvento, numeroPartecipanti);
+                                List<int> listaInteressati = db.getRandomInteressati(numeroPartecipanti);
+
+                            }
+                            else if(controllaLibroInDb == false)
+                            {
+                                Console.WriteLine("Libro non presente nel database, inserirlo prima di creare un evento associato");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Data inserita NON valida");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Codice inserito NON valido");
+                    }
+                    break;
                 default: 
                     Console.WriteLine("\tOperazione NON valida");
                     break;
@@ -198,7 +241,6 @@ namespace csharp_biblioteca_db
             getScaffali();
             if (this.ScaffaliContains(scaffale))
             {
-                Console.WriteLine("CIAO");
                 DVD nuovoDVD = new DVD(db.getCodiceUnicoDocumento(), Titolo, Anno, Settore, Durata, scaffale, listaAutori);
                 Console.WriteLine("Righe inserite nel database: {0}", db.AddDVD(nuovoDVD));
             }
